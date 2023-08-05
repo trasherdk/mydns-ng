@@ -7,7 +7,7 @@
 
 	Copyright (C) 2002-2005  Don Moore <bboy@bboy.net>
 	Copyright (C) 2005-2010  MyDNS Team
-	
+
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -831,7 +831,7 @@ function auto_next_serial($current) {
 function validate_name(&$name, $desc_prefix, &$errors, $wildcard_ok, $origin = NULL,
 		       $allow_backslash = 0) {
   /* List of valid characters for a label */
-  $valid_chars = "*ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-_";
+  $valid_chars = "*ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-_/";
 
   /* Backslash may be appropriate in the mbox field, for folks with a dot in their username */
   /* For example, "bleach\.boy.bboy.net" would mean "bleach.boy@bboy.net" */
@@ -1243,7 +1243,7 @@ function send_img() {
       "b514700453d97980e7b24b6c33dceda2e6fb0c44c889f4d9eb778c75c886ffba5fcbc5be34a" .
       "88cfcd0df28527215eb499ff0660ad283ae55ed4840000000049454e44ae426082";
     break;
-    
+
   case "PreviousHover.png":
     $imgdata = "89504e470d0a1a0a0000000d494844520000000b0000000c0806000000b4a9479e0" .
       "0000006624b474400ff00ff00ffa0bda793000000ab4944415478da8dd1316a02611086e167" .
@@ -1299,7 +1299,7 @@ function send_img() {
       "16267476c6d3dec359b626a4ae01a2305fcc666a944b9dcdd95d56aa42938ea411dffd2b4d3" .
       "ec1671cf7d1fee00a04a929b850a144b0000000049454e44ae426082";
     break;
-    
+
   case "Refresh.png":
     $imgdata = "89504e470d0a1a0a0000000d494844520000001200000012080600000056ce8e570" .
       "000000467414d410000b18f0bfc610500000006624b474400ff00ff00ffa0bda79300000009" .
@@ -1749,14 +1749,14 @@ function db_get_known_types() {
       open_page();
       ErrSQL("Error getting available values for " . quote("type") . " column in RR table.");
     }
- 
+
     while ($row = sql_fetch_row($res)) {
       $val = $row[0];
       foreach ($available_rr_types as $rr_type)
 	if (!strcasecmp($val, $rr_type))
 	  $type_values[] = $val;
     }
- 
+
   } elseif ($use_pgsql) {
     $res = sql_query("SELECT consrc FROM pg_constraint" .
 		     " WHERE conname LIKE '" . esc($rr_table_name) . "%'");
@@ -2091,7 +2091,7 @@ function soa_editor($soa = NULL, $error_message = NULL) {
 				  $soa_bgcolor);
     else
       $notify_button = "";
-		
+
     switch (strtolower(postvar('action'))) {
     case "delete zone":
       if (($rrct = zone_numrecs($soa['id'])) == 0)
@@ -2164,7 +2164,7 @@ function soa_editor($soa = NULL, $error_message = NULL) {
    if ($new_soa)
      echo "<INPUT type=hidden name=\"done\" value=\"1\">\n";
    else
-     echo "<INPUT type=hidden name=\"zone\" value=\"" 
+     echo "<INPUT type=hidden name=\"zone\" value=\""
        . (isset($_POST['zone']) ? $_POST['zone'] : $soa['id']) . "\">\n";
   $query = getpostvar('query');
   if (strlen($query))
@@ -2459,7 +2459,7 @@ function soa_update() {
     ",expire=" . (int)$soa['expire'] .
     ",minimum=" . (int)$soa['minimum'] .
     ",ttl=" . (int)$soa['ttl'];
-  
+
   if ($soa_use_active)
     $query .= ",active='" . esc($soa['active']) . "'";
 
@@ -2467,10 +2467,10 @@ function soa_update() {
     $query .= ",recursive='" . esc($soa['recursive']) . "'";
 
   $query .= " WHERE id=" . (int)$soa['id'];
-  
+
   sql_query($query)
     or ErrSQL("Error updating SOA record for zone " . (int)$soa['id'] . ".");
-  
+
   zone_redirect($soa['id']);
 }
 /*--- soa_update() ------------------------------------------------------------------------------*/
@@ -2508,7 +2508,7 @@ function notify_slaves() {
       $nce[] = $data;
     }
   }
-  
+
   if ($soa_use_also_notify) {
     $query = soa_select() . "WHERE id=" . (int)$soa['id'];
 
@@ -2623,7 +2623,7 @@ function soa_add() {
   }
 
   soa_validate($soa, 1);
-  
+
   $active = ($soa_use_active ? ",active" : "");
   $recursive = ($soa_use_recursive ? ",recursive" : "");
 
@@ -2653,7 +2653,7 @@ function soa_add() {
 			"SOA record for origin " . $soa['origin']);
 
   add_default_rr($new_soa);
-  
+
   zone_editor($new_soa['id']);
 }
 /*--- soa_add() ---------------------------------------------------------------------------------*/
@@ -2693,7 +2693,7 @@ function zone_redirect($zone_id) {
     $xtra = "&page=$page";
   if (($query = $_POST['query'] ? $_POST['query'] : $_GET['query']))
     $xtra .= "&query=" . urlencode($query);
-  
+
   header("Location: {$_SERVER['PHP_SELF']}?zone=$zone_id$xtra");
 }
 /*--- zone_redirect() ---------------------------------------------------------------------------*/
@@ -3135,13 +3135,13 @@ function ptr_create_soa($ip, &$name) {
   $query .= ")";
   sql_query($query)
     or ErrSQL("Error creating new SOA record for " . quote($origin) . ".");
-  
+
   /* Get new SOA */
   $soa = sql_result(soa_select() . "WHERE origin='".esc($origin)."'", "SOA record for PTR data");
 
   /* Add default records */
   add_default_rr($soa);
-  
+
   return $soa;
 }
 /*--- ptr_create_soa() --------------------------------------------------------------------------*/
@@ -3189,7 +3189,7 @@ function ptr_create_rr($arpazone, $name, $data, $origin) {
     if ($allow_ixfr)
       $query .= "," . (int)$arpazone['serial'];
     $query .= ")";
-    
+
     sql_query($query)
       or ErrSQL("Error adding automatic PTR record " . quote($longname));
   }
@@ -3297,7 +3297,7 @@ function rr_add() {
     $query .= "," . (int)next_serial($soa['serial']);	/* This is a bodge keep in step with below */
   $query .= ")";
   sql_query($query) or ErrSQL("Error adding new resource record to zone " . (int)$soa['id'] . ".");
-  
+
   /* Update serial number for zone if configured to do so */
   soa_update_serial($soa);				/* Keep in step with next_serial above */
 
@@ -3549,8 +3549,8 @@ function rr_row($soa, $rr = NULL) {
 	if (strlen($values['edata']))
 	$values['data'] .= $values['edata'];
   }
-	
-	
+
+
   if (!strlen($values['name']))
     $values['name'] = $soa['origin'];
 
@@ -3642,7 +3642,7 @@ function rr_row($soa, $rr = NULL) {
        foreach ($rr_active_types as $rat) {
 	 echo "<TD>";
 	 echo "\t<INPUT class=activeList ";
-	 if($rat == $values['active']) { echo " checked"; } 
+	 if($rat == $values['active']) { echo " checked"; }
 	 echo " type=radio name=\"active\" value=\"" . $rat . "\">";
 	 echo $rat . "</INPUT>\n";
 	 echo "</TD>";
@@ -3690,7 +3690,7 @@ function rr_row($soa, $rr = NULL) {
 <?php
   if ($allow_ixfr) {
     echo "<TD class=rrCell title\"Timestamp of last record change\">" . ent($values['stamp']) . "</TD>\n";
-    echo "<TD class=rrCell title=\"Serial number of soa when last changed\">" . ent($values['serial']) . "</TD>\n"; 
+    echo "<TD class=rrCell title=\"Serial number of soa when last changed\">" . ent($values['serial']) . "</TD>\n";
    }
 ?>
 <TD class=rrCellRight><?php echo $buttons?>
@@ -3849,7 +3849,7 @@ function rr_editor($soa, $soa_error_message = NULL, $rr_error_message = NULL) {
       if ($offset < $num_base) {
 	$query = rr_select() . " WHERE zone=" . (int)$soa['id'] .
 	  " AND (name='' OR name='" .esc($soa['origin']) . "') ORDER BY type,aux,data ";
-	
+
 	if ($use_pgsql)
 	  $query .= "LIMIT $rr_group_size OFFSET $offset";
 	else
