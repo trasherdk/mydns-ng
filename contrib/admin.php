@@ -1492,7 +1492,8 @@ function offset_select($page, $total, $group_size, $xtra = "") {
 
   if ($pages == 1)
     return 0;
-
+  if ($page == "")
+    $page = 0;
   if ($page > $last)
     $page = $last;
   if ($page < 0)
