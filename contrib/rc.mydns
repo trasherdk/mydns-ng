@@ -1,0 +1,117 @@
+#!/bin/sh
+
+#
+# Startup for mydns
+#
+# "Fernando Durango" <fernando@secret.org>
+#
+PIDFILE="/var/run/mydns.pid"
+PID=0
+RUNNING=0
+DAEMON=$(which mydns)
+
+mydns_pcount() {
+	echo $( pgrep -U mydns mydns | wc -l )
+}
+
+mydns_running() {
+	if [ ! -f ${PIDFILE} ] && [ $(mydns_pcount) -eq 0 ]; then
+		return 1
+	fi
+
+	if [ ! -f ${PIDFILE} ] && [ $(mydns_pcount) -gt 0 ]; then
+		PID=$( pgrep mydns | head -n1 )
+		if [ "${PID}" = "" ]; then
+			return 1
+		fi
+	elif [ -f ${PIDFILE} ]; then
+		PID=$( cat ${PIDFILE} )
+	else
+		return 1
+	fi
+	
+	if [ "$(readlink /proc/${PID}/exe)" != "${DAEMON}" ]; then
+		rm ${PIDFILE}
+		return 1
+	fi
+	
+	return 0
+}
+
+mydns_start() {
+	if [ ${RUNNING} -gt 0 ]; then
+		echo "${LGREEN}* mydns (pid ${PID}) already running."
+	else
+		if [ -x ${DAEMON} ] ; then
+			echo -n "${WHITE} mydns starting...."
+			${DAEMON} --background \
+			&& {
+				sleep 2
+				RUNNING=$( mydns_pcount );
+				echo "${LGREEN} OK"
+			} \
+			|| {
+				echo "${RED} ERROR ${YELLOW} Failed to start..."
+			}
+		else
+			echo "${RED}ERROR:${WHITE} mydns daemon not found on path!${RESTORE}"
+		fi
+	fi
+	
+	echo "${RESTORE}"
+}
+
+mydns_stop() {
+	if [ ${RUNNING} -eq 0 ] && [ $(mydns_pcount) -eq 0 ]; then
+		echo "mydns (no pid file) not running."
+		return 1
+	fi
+
+	if [ ${RUNNING} -gt 0 ]; then
+		echo "killing mydns (pid $PID)."
+		$(which kill) -TERM ${PID} 1>/dev/null 2>&1 \
+		&& {
+			while [ $(mydns_pcount) -gt 0 ]; do
+				echo "${YELLWW}* Killing mydns child processes:${WHITE} $(mydns_pcount) ${RESTORE}"
+				kill -9 $(pgrep mydns)
+				sleep 1
+			done
+			RUNNING=0;
+		}
+	fi
+}
+
+# look for our pidfile
+if [ -f ${PIDFILE} ] && [ $(mydns_pcount) -gt 0 ] ; then
+	PID=$( cat ${PIDFILE} )
+	if [ "x${PID}" != "x" ] && mydns_running ; then
+			STATUS="mydns (pid ${PID}) running."
+			RUNNING=$( mydns_pcount )
+	else
+			STATUS="mydns (pid ${PID}?) not running."
+	fi
+else
+  STATUS="mydns (no pid file) not running."
+fi
+
+
+case "$1" in
+	'start')
+		mydns_start
+		;;
+	'stop')
+		mydns_stop
+		;;
+	'restart')
+		mydns_stop
+		sleep 2
+		mydns_start
+		;;
+	'status'|*)
+		echo ${STATUS}
+		;;
+	*)
+		echo "Usage: $( basename $0) { start | stop | restart | status }"
+		;;
+esac
+exit 0
