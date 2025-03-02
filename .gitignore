@@ -36,3 +36,5 @@ stamp-vti
 *.tar.gz
 texinfo.tex
 version.texi
+compile
+mkinstalldirs
